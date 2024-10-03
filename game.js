@@ -14,12 +14,39 @@ const enemies = [
 let playerHealth = 100;
 let currentEnemy = {};
 let enemyAttack = 0;
+let playerPosition = { x: 0, y: 0 };
+let enemyPosition = { x: 0, y: 0 };
 
 function startGame() {
     const randomEnemyIndex = Math.floor(Math.random() * enemies.length);
     currentEnemy = { ...enemies[randomEnemyIndex] };
     enemyAttack = currentEnemy.attack;
+
+    // Set random positions for player and enemy
+    playerPosition = { x: 0, y: 0 };
+    enemyPosition = { x: Math.floor(Math.random() * 5), y: Math.floor(Math.random() * 5) };
+
     updateStatus();
+    drawGrid();
+}
+
+function drawGrid() {
+    const grid = document.getElementById("grid");
+    grid.innerHTML = ''; // Clear the grid
+    for (let y = 0; y < 5; y++) {
+        for (let x = 0; x < 5; x++) {
+            const cell = document.createElement("div");
+            cell.classList.add("cell");
+            if (x === playerPosition.x && y === playerPosition.y) {
+                cell.classList.add("player");
+                cell.innerText = "P"; // Player marker
+            } else if (x === enemyPosition.x && y === enemyPosition.y) {
+                cell.classList.add("enemy");
+                cell.innerText = "E"; // Enemy marker
+            }
+            grid.appendChild(cell);
+        }
+    }
 }
 
 function updateStatus() {
@@ -42,11 +69,13 @@ function attack() {
         }
     }
     updateStatus();
+    drawGrid();
 }
 
 function defend() {
     playerHealth -= Math.floor(enemyAttack / 2);
     updateStatus();
+    drawGrid();
 }
 
 function throwWeapon() {
@@ -62,6 +91,7 @@ function throwWeapon() {
         }
     }
     updateStatus();
+    drawGrid();
 }
 
 function useMagic() {
@@ -81,6 +111,7 @@ function fireball() {
         }
     }
     updateStatus();
+    drawGrid();
     hideMagicButtons();
 }
 
@@ -97,6 +128,7 @@ function thunderbolt() {
         }
     }
     updateStatus();
+    drawGrid();
     hideMagicButtons();
 }
 
@@ -104,17 +136,13 @@ function hideMagicButtons() {
     document.getElementById("magic-buttons").style.display = "none";
 }
 
-function resetGame() {
-    playerHealth = 100;
-    startGame();
-}
+// Initialize the game
+startGame();
 
+// Event listeners for buttons
 document.getElementById("attack").addEventListener("click", attack);
 document.getElementById("defend").addEventListener("click", defend);
 document.getElementById("throw").addEventListener("click", throwWeapon);
 document.getElementById("magic").addEventListener("click", useMagic);
 document.getElementById("fireball").addEventListener("click", fireball);
 document.getElementById("thunderbolt").addEventListener("click", thunderbolt);
-
-// Start the game when the page loads
-startGame();
