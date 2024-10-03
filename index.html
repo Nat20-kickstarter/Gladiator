@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gladiator Game</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        #game {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #buttons {
+            margin-top: 20px;
+        }
+        button {
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game">
+        <h1>Gladiator Game</h1>
+        <div id="status"></div>
+        <div id="buttons">
+            <button id="attack">Attack</button>
+            <button id="defend">Defend</button>
+            <button id="throw">Throw</button>
+            <button id="magic">Magic</button>
+            <div id="magic-buttons" style="display:none;">
+                <button id="fireball">Fireball</button>
+                <button id="thunderbolt">Thunderbolt</button>
+            </div>
+        </div>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
