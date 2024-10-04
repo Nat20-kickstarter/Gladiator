@@ -56,20 +56,40 @@ function updateStatus() {
     `;
 }
 
+// Calculate distance between player and enemy
+function isAdjacent(pos1, pos2) {
+    const dx = Math.abs(pos1.x - pos2.x);
+    const dy = Math.abs(pos1.y - pos2.y);
+    return dx + dy === 1; // adjacent if the sum of the deltas is 1
+}
+
+// Calculate if enemy is within 2 squares for fireball
+function withinTwoSquares(pos1, pos2) {
+    const dx = Math.abs(pos1.x - pos2.x);
+    const dy = Math.abs(pos1.y - pos2.y);
+    return dx <= 2 && dy <= 2; 
+}
+
 function attack() {
-    currentEnemy.health -= Math.floor(Math.random() * 20 + 10);
-    if (currentEnemy.health <= 0) {
-        alert(`You defeated the ${currentEnemy.name}!`);
-        startGame();
-    } else {
-        playerHealth -= enemyAttack;
-        if (playerHealth <= 0) {
-            alert("You have been defeated!");
-            resetGame();
+    if (isAdjacent(playerPosition, enemyPosition)) {
+        currentEnemy.health -= Math.floor(Math.random() * 20 + 10);
+        if (currentEnemy.health <= 0) {
+            alert(`You defeated the ${currentEnemy.name}!`);
+            startGame();
+        } else {
+            if (isAdjacent(playerPosition, enemyPosition)) {
+                playerHealth -= enemyAttack;
+            }
+            if (playerHealth <= 0) {
+                alert("You have been defeated!");
+                resetGame();
+            }
         }
+        updateStatus();
+        drawGrid();
+    } else {
+        alert("You must be next to the enemy to attack!");
     }
-    updateStatus();
-    drawGrid();
 }
 
 function defend() {
@@ -78,12 +98,13 @@ function defend() {
     drawGrid();
 }
 
-function throwWeapon() {
-    currentEnemy.health -= Math.floor(Math.random() * 15 + 5);
-    if (currentEnemy.health <= 0) {
-        alert(`You defeated the ${currentEnemy.name}!`);
-        startGame();
-    } else {
+// Movement logic for player (up, down, left, right)
+function move(direction) {
+    if (direction === 'up' && playerPosition.y > 0) playerPosition.y--;
+    if (direction === 'down' && playerPosition.y < 4) playerPosition.y++;
+    if (direction === 'left' && playerPosition.x > 0) playerPosition.x--;
+    if (direction === 'right' && playerPosition.x < 4) playerPosition.x++;
+    if (isAdjacent(playerPosition, enemyPosition)) {
         playerHealth -= enemyAttack;
         if (playerHealth <= 0) {
             alert("You have been defeated!");
@@ -94,21 +115,16 @@ function throwWeapon() {
     drawGrid();
 }
 
-function useMagic() {
-    document.getElementById("magic-buttons").style.display = "block";
-}
-
+// Magic logic
 function fireball() {
-    currentEnemy.health -= Math.floor(Math.random() * 30 + 15);
-    if (currentEnemy.health <= 0) {
-        alert(`You defeated the ${currentEnemy.name}!`);
-        startGame();
-    } else {
-        playerHealth -= enemyAttack;
-        if (playerHealth <= 0) {
-            alert("You have been defeated!");
-            resetGame();
+    if (withinTwoSquares(playerPosition, enemyPosition)) {
+        currentEnemy.health -= Math.floor(Math.random() * 30 + 15);
+        if (currentEnemy.health <= 0) {
+            alert(`You defeated the ${currentEnemy.name} with Fireball!`);
+            startGame();
         }
+    } else {
+        alert("Fireball can only hit enemies within 2 squares of you!");
     }
     updateStatus();
     drawGrid();
@@ -118,14 +134,8 @@ function fireball() {
 function thunderbolt() {
     currentEnemy.health -= Math.floor(Math.random() * 40 + 20);
     if (currentEnemy.health <= 0) {
-        alert(`You defeated the ${currentEnemy.name}!`);
+        alert(`You defeated the ${currentEnemy.name} with Thunderbolt!`);
         startGame();
-    } else {
-        playerHealth -= enemyAttack;
-        if (playerHealth <= 0) {
-            alert("You have been defeated!");
-            resetGame();
-        }
     }
     updateStatus();
     drawGrid();
@@ -142,7 +152,16 @@ startGame();
 // Event listeners for buttons
 document.getElementById("attack").addEventListener("click", attack);
 document.getElementById("defend").addEventListener("click", defend);
-document.getElementById("throw").addEventListener("click", throwWeapon);
-document.getElementById("magic").addEventListener("click", useMagic);
+
+// Move event listeners for directions
+document.getElementById("move-up").addEventListener("click", () => move('up'));
+document.getElementById("move-down").addEventListener("click", () => move('down'));
+document.getElementById("move-left").addEventListener("click", () => move('left'));
+document.getElementById("move-right").addEventListener("click", () => move('right'));
+
+document.getElementById("magic").addEventListener("click", () => {
+    document.getElementById("magic-buttons").style.display = "block";
+});
 document.getElementById("fireball").addEventListener("click", fireball);
 document.getElementById("thunderbolt").addEventListener("click", thunderbolt);
+
