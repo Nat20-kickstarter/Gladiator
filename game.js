@@ -14,7 +14,6 @@ const enemies = [
 let playerHealth = 100;
 let playerPosition = { x: 0, y: 0 };
 
-// Initialize enemies' positions
 function initializeEnemyPositions() {
     enemies.forEach((enemy) => {
         enemy.position.x = Math.floor(Math.random() * 5);
@@ -39,7 +38,6 @@ function drawGrid() {
                 cell.classList.add("player");
                 cell.innerText = "P"; // Player marker
             }
-            // Draw each enemy in the grid
             enemies.forEach((enemy) => {
                 if (x === enemy.position.x && y === enemy.position.y) {
                     cell.classList.add("enemy");
@@ -55,7 +53,14 @@ function updateStatus() {
     document.getElementById("status").innerText = `Player Health: ${playerHealth}`;
 }
 
-// Move enemy towards the player
+// Check if the player and enemy are adjacent
+function isAdjacent(pos1, pos2) {
+    const dx = Math.abs(pos1.x - pos2.x);
+    const dy = Math.abs(pos1.y - pos2.y);
+    return dx + dy === 1; // adjacent if the sum of the deltas is 1
+}
+
+// Move enemy toward the player
 function moveEnemies() {
     enemies.forEach((enemy) => {
         if (enemy.health > 0) { // Only move alive enemies
@@ -75,11 +80,12 @@ function moveEnemies() {
 
 // Attack logic
 function attack() {
+    let defeatedEnemies = [];
     enemies.forEach((enemy) => {
         if (isAdjacent(playerPosition, enemy.position)) {
             enemy.health -= Math.floor(Math.random() * 20 + 10);
             if (enemy.health <= 0) {
-                alert(`You defeated the ${enemy.name}!`);
+                defeatedEnemies.push(enemy.name);
             } else {
                 playerHealth -= enemy.attack;
                 if (playerHealth <= 0) {
@@ -89,6 +95,11 @@ function attack() {
             }
         }
     });
+    
+    if (defeatedEnemies.length > 0) {
+        alert(`You defeated: ${defeatedEnemies.join(", ")}`);
+    }
+
     moveEnemies(); // Move enemies after player action
     updateStatus();
     drawGrid();
@@ -100,6 +111,7 @@ function move(direction) {
     if (direction === 'down' && playerPosition.y < 4) playerPosition.y++;
     if (direction === 'left' && playerPosition.x > 0) playerPosition.x--;
     if (direction === 'right' && playerPosition.x < 4) playerPosition.x++;
+    
     moveEnemies(); // Move enemies after player movement
     updateStatus();
     drawGrid();
@@ -132,6 +144,13 @@ function thunderbolt() {
     drawGrid();
 }
 
+// Check if the enemy is within two squares
+function withinTwoSquares(pos1, pos2) {
+    const dx = Math.abs(pos1.x - pos2.x);
+    const dy = Math.abs(pos1.y - pos2.y);
+    return dx <= 2 && dy <= 2; 
+}
+
 function hideMagicButtons() {
     document.getElementById("magic-buttons").style.display = "none";
 }
@@ -152,5 +171,5 @@ document.getElementById("move-right").addEventListener("click", () => move('righ
 document.getElementById("magic").addEventListener("click", () => {
     document.getElementById("magic-buttons").style.display = "block";
 });
-document.getElementById("fireball").
-
+document.getElementById("fireball").addEventListener("click", fireball);
+document.getElementById("thunderbolt").addEventListener("click", thunderbolt);
