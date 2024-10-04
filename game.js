@@ -1,31 +1,29 @@
 const enemies = [
-    { name: "Orc", health: 100, attack: 15 },
-    { name: "Goblin", health: 50, attack: 10 },
-    { name: "Troll", health: 120, attack: 20 },
-    { name: "Knight", health: 80, attack: 18 },
-    { name: "Mage", health: 60, attack: 12 },
-    { name: "Beast", health: 90, attack: 16 },
-    { name: "Dragon", health: 200, attack: 30 },
-    { name: "Vampire", health: 70, attack: 14 },
-    { name: "Zombie", health: 40, attack: 8 },
-    { name: "Assassin", health: 75, attack: 19 }
+    { name: "Orc", health: 100, attack: 15, position: {} },
+    { name: "Goblin", health: 50, attack: 10, position: {} },
+    { name: "Troll", health: 120, attack: 20, position: {} },
+    { name: "Knight", health: 80, attack: 18, position: {} },
+    { name: "Mage", health: 60, attack: 12, position: {} },
+    { name: "Beast", health: 90, attack: 16, position: {} },
+    { name: "Dragon", health: 200, attack: 30, position: {} },
+    { name: "Vampire", health: 70, attack: 14, position: {} },
+    { name: "Zombie", health: 40, attack: 8, position: {} },
+    { name: "Assassin", health: 75, attack: 19, position: {} }
 ];
 
 let playerHealth = 100;
-let currentEnemy = {};
-let enemyAttack = 0;
 let playerPosition = { x: 0, y: 0 };
-let enemyPosition = { x: 0, y: 0 };
+
+// Initialize enemies' positions
+function initializeEnemyPositions() {
+    enemies.forEach((enemy) => {
+        enemy.position.x = Math.floor(Math.random() * 5);
+        enemy.position.y = Math.floor(Math.random() * 5);
+    });
+}
 
 function startGame() {
-    const randomEnemyIndex = Math.floor(Math.random() * enemies.length);
-    currentEnemy = { ...enemies[randomEnemyIndex] };
-    enemyAttack = currentEnemy.attack;
-
-    // Set random positions for player and enemy
-    playerPosition = { x: 0, y: 0 };
-    enemyPosition = { x: Math.floor(Math.random() * 5), y: Math.floor(Math.random() * 5) };
-
+    initializeEnemyPositions();
     updateStatus();
     drawGrid();
 }
@@ -40,60 +38,58 @@ function drawGrid() {
             if (x === playerPosition.x && y === playerPosition.y) {
                 cell.classList.add("player");
                 cell.innerText = "P"; // Player marker
-            } else if (x === enemyPosition.x && y === enemyPosition.y) {
-                cell.classList.add("enemy");
-                cell.innerText = "E"; // Enemy marker
             }
+            // Draw each enemy in the grid
+            enemies.forEach((enemy) => {
+                if (x === enemy.position.x && y === enemy.position.y) {
+                    cell.classList.add("enemy");
+                    cell.innerText = "E"; // Enemy marker
+                }
+            });
             grid.appendChild(cell);
         }
     }
 }
 
 function updateStatus() {
-    document.getElementById("status").innerText = `
-        Player Health: ${playerHealth}
-        Enemy: ${currentEnemy.name} (Health: ${currentEnemy.health})
-    `;
+    document.getElementById("status").innerText = `Player Health: ${playerHealth}`;
 }
 
-// Calculate distance between player and enemy
-function isAdjacent(pos1, pos2) {
-    const dx = Math.abs(pos1.x - pos2.x);
-    const dy = Math.abs(pos1.y - pos2.y);
-    return dx + dy === 1; // adjacent if the sum of the deltas is 1
-}
-
-// Calculate if enemy is within 2 squares for fireball
-function withinTwoSquares(pos1, pos2) {
-    const dx = Math.abs(pos1.x - pos2.x);
-    const dy = Math.abs(pos1.y - pos2.y);
-    return dx <= 2 && dy <= 2; 
-}
-
-function attack() {
-    if (isAdjacent(playerPosition, enemyPosition)) {
-        currentEnemy.health -= Math.floor(Math.random() * 20 + 10);
-        if (currentEnemy.health <= 0) {
-            alert(`You defeated the ${currentEnemy.name}!`);
-            startGame();
-        } else {
-            if (isAdjacent(playerPosition, enemyPosition)) {
-                playerHealth -= enemyAttack;
+// Move enemy towards the player
+function moveEnemies() {
+    enemies.forEach((enemy) => {
+        if (enemy.health > 0) { // Only move alive enemies
+            if (enemy.position.x < playerPosition.x) {
+                enemy.position.x++;
+            } else if (enemy.position.x > playerPosition.x) {
+                enemy.position.x--;
             }
-            if (playerHealth <= 0) {
-                alert("You have been defeated!");
-                resetGame();
+            if (enemy.position.y < playerPosition.y) {
+                enemy.position.y++;
+            } else if (enemy.position.y > playerPosition.y) {
+                enemy.position.y--;
             }
         }
-        updateStatus();
-        drawGrid();
-    } else {
-        alert("You must be next to the enemy to attack!");
-    }
+    });
 }
 
-function defend() {
-    playerHealth -= Math.floor(enemyAttack / 2);
+// Attack logic
+function attack() {
+    enemies.forEach((enemy) => {
+        if (isAdjacent(playerPosition, enemy.position)) {
+            enemy.health -= Math.floor(Math.random() * 20 + 10);
+            if (enemy.health <= 0) {
+                alert(`You defeated the ${enemy.name}!`);
+            } else {
+                playerHealth -= enemy.attack;
+                if (playerHealth <= 0) {
+                    alert("You have been defeated!");
+                    resetGame();
+                }
+            }
+        }
+    });
+    moveEnemies(); // Move enemies after player action
     updateStatus();
     drawGrid();
 }
@@ -104,42 +100,36 @@ function move(direction) {
     if (direction === 'down' && playerPosition.y < 4) playerPosition.y++;
     if (direction === 'left' && playerPosition.x > 0) playerPosition.x--;
     if (direction === 'right' && playerPosition.x < 4) playerPosition.x++;
-    if (isAdjacent(playerPosition, enemyPosition)) {
-        playerHealth -= enemyAttack;
-        if (playerHealth <= 0) {
-            alert("You have been defeated!");
-            resetGame();
-        }
-    }
+    moveEnemies(); // Move enemies after player movement
     updateStatus();
     drawGrid();
 }
 
 // Magic logic
 function fireball() {
-    if (withinTwoSquares(playerPosition, enemyPosition)) {
-        currentEnemy.health -= Math.floor(Math.random() * 30 + 15);
-        if (currentEnemy.health <= 0) {
-            alert(`You defeated the ${currentEnemy.name} with Fireball!`);
-            startGame();
+    enemies.forEach((enemy) => {
+        if (withinTwoSquares(playerPosition, enemy.position)) {
+            enemy.health -= Math.floor(Math.random() * 30 + 15);
+            if (enemy.health <= 0) {
+                alert(`You defeated the ${enemy.name} with Fireball!`);
+            }
         }
-    } else {
-        alert("Fireball can only hit enemies within 2 squares of you!");
-    }
+    });
+    hideMagicButtons();
     updateStatus();
     drawGrid();
-    hideMagicButtons();
 }
 
 function thunderbolt() {
-    currentEnemy.health -= Math.floor(Math.random() * 40 + 20);
-    if (currentEnemy.health <= 0) {
-        alert(`You defeated the ${currentEnemy.name} with Thunderbolt!`);
-        startGame();
-    }
+    enemies.forEach((enemy) => {
+        enemy.health -= Math.floor(Math.random() * 40 + 20);
+        if (enemy.health <= 0) {
+            alert(`You defeated the ${enemy.name} with Thunderbolt!`);
+        }
+    });
+    hideMagicButtons();
     updateStatus();
     drawGrid();
-    hideMagicButtons();
 }
 
 function hideMagicButtons() {
@@ -162,6 +152,5 @@ document.getElementById("move-right").addEventListener("click", () => move('righ
 document.getElementById("magic").addEventListener("click", () => {
     document.getElementById("magic-buttons").style.display = "block";
 });
-document.getElementById("fireball").addEventListener("click", fireball);
-document.getElementById("thunderbolt").addEventListener("click", thunderbolt);
+document.getElementById("fireball").
 
